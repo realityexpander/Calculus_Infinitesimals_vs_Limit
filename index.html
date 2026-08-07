@@ -171,7 +171,7 @@
 
         function drawCurve(ctx, width, height) {
             ctx.strokeStyle = '#38bdf8';
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 4;
             ctx.beginPath();
             for (let px = offsetX; px < width; px++) {
                 let x = (px - offsetX) / scaleX;
@@ -249,7 +249,7 @@
             let m = df(x.toFixed(5));
 
             // True Tangent Line
-            infCtx.strokeStyle = '#c084fc'; // Purple
+            infCtx.strokeStyle = '#10b981'; // Green
             infCtx.lineWidth = 2;
             let b = y - m * x;
             infCtx.beginPath();
@@ -267,11 +267,13 @@
 
             // Microscope connecting line
             infCtx.strokeStyle = '#475569';
-            infCtx.lineWidth = 1;
+            infCtx.lineWidth = 2;
+            infCtx.setLineDash([2, 2]);
             infCtx.beginPath();
             infCtx.moveTo(toCanvasX(x), toCanvasY(y));
             infCtx.lineTo(scopeX, scopeY);
             infCtx.stroke();
+            infCtx.setLineDash([]);
 
             // Scope Background
             infCtx.beginPath();
@@ -294,8 +296,8 @@
             let scaleScope = scopeRadius / (viewWidth / 2.0);
 
             // 2. Draw Tangent Line in Scope
-            infCtx.strokeStyle = '#c084fc';
-            infCtx.lineWidth = 1;
+            infCtx.strokeStyle = '#10b981'; // Green
+            infCtx.lineWidth = 2;
             infCtx.beginPath();
             infCtx.moveTo(scopeX - scopeRadius, scopeY + m * scopeRadius);
             infCtx.lineTo(scopeX + scopeRadius, scopeY - m * scopeRadius);
