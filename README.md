@@ -12,6 +12,9 @@ http://github.io/realityexpander/Calculus_Infinitesimals_vs_Limit
 
 An interactive, browser-based simulation that provides a side-by-side visual comparison of two foundational approaches to calculus: standard limit theory and non-standard analysis (infinitesimals). 
 
+Public link to Gemini AI Conversation that generated the initial code:
+https://share.gemini.google/o2XF5bAkUmZo
+
 ## 🚀 Features
 * **Interactive HTML5 Canvas:** Renders dynamic curves, secant lines, and tangent lines in real-time.
 * **Limit Approach Panel:** Visualizes the secant line approach as step size ($h$) approaches zero, highlighting the standard $\epsilon-\delta$ conceptual framework.
