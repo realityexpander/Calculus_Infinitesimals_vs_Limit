@@ -93,7 +93,7 @@
     <div class="controls">
         <div class="control-group">
             <label for="xSlider">Base Point (x): <span id="xVal" class="val-display">1.50</span></label>
-            <input type="range" id="xSlider" min="0.2" max="2.5" step="0.05" value="1.5">
+            <input type="range" id="xSlider" min="0.01" max="5.0" step="0.05" value=".91">
         </div>
         <div class="control-group">
             <label for="hSlider">Limit Step Size (h): <span id="hVal" class="val-display">1.00</span></label>
@@ -101,7 +101,7 @@
         </div>
         <div class="control-group">
             <label for="zoomSlider">Microscope Zoom: <span id="zoomVal" class="val-display">15x</span></label>
-            <input type="range" id="zoomSlider" min="5" max="40" step="1" value="15">
+            <input type="range" id="zoomSlider" min="1.1" max="30.0" step="0.1" value="15.0">
         </div>
     </div>
 
@@ -136,15 +136,19 @@
         const limCanvas = document.getElementById('limCanvas');
         const limCtx = limCanvas.getContext('2d');
 
-        // Math Function: y = 0.5 * x^2
-        const f = (x) => 0.5 * x * x;
-        const df = (x) => x; // Derivative
+        // Math Functions: 
+        // y = 0.5 * x^2
+        //const f = (x) => 0.5 * x * x;
+        //const df = (x) => x; // Derivative
+
+        const f = (x) => 0.1*(x-5.)*(x-1.)*(x-2.)+0.5;
+        const df = (x) => 0.3*x**(2)-1.6*x+1.7; // Derivative
 
         // Canvas scaling parameters
-        const scaleX = 100;
-        const scaleY = 100;
-        const offsetX = 50;
-        const offsetY = 350;
+        const scaleX = 100.0;
+        const scaleY = 200.0;
+        const offsetX = 50.0;
+        const offsetY = 350.0;
 
         function toCanvasX(x) { return offsetX + x * scaleX; }
         function toCanvasY(y) { return offsetY - y * scaleY; }
@@ -181,7 +185,7 @@
         function drawPoint(ctx, x, y, color) {
             ctx.fillStyle = color;
             ctx.beginPath();
-            ctx.arc(toCanvasX(x), toCanvasY(y), 5, 0, Math.PI * 2);
+            ctx.arc(toCanvasX(x), toCanvasY(y), 6, 0, Math.PI * 2);
             ctx.fill();
         }
 
@@ -202,9 +206,9 @@
             let m = (y2 - y1) / (x2 - x);
             let b = y1 - m * x;
             
-            let extX1 = 0;
+            let extX1 = 0.0;
             let extY1 = m * extX1 + b;
-            let extX2 = 5;
+            let extX2 = 5.0;
             let extY2 = m * extX2 + b;
 
             limCtx.beginPath();
@@ -231,9 +235,9 @@
             limCtx.fillText(`h = ${h.toFixed(2)}`, toCanvasX(x + h/2) - 20, toCanvasY(y1) + 20);
             
             limCtx.fillStyle = '#10b981';
-            limCtx.fillText(`Secant Slope: ${m.toFixed(2)}`, 20, 30);
+            limCtx.fillText(`Secant Slope: ${m.toFixed(2)}`, 60, 30);
             limCtx.fillStyle = '#38bdf8';
-            limCtx.fillText(`Actual Tangent: ${df(x).toFixed(2)}`, 20, 50);
+            limCtx.fillText(`Actual Tangent: ${df(x).toFixed(2)}`, 60, 50);
         }
 
         function renderInfinitesimalCanvas(x, zoom) {
@@ -241,8 +245,8 @@
             drawGrid(infCtx, infCanvas.width, infCanvas.height);
             drawCurve(infCtx, infCanvas.width, infCanvas.height);
 
-            let y = f(x);
-            let m = df(x);
+            let y = f(x.toFixed(5));
+            let m = df(x.toFixed(5));
 
             // True Tangent Line
             infCtx.strokeStyle = '#c084fc'; // Purple
@@ -250,15 +254,16 @@
             let b = y - m * x;
             infCtx.beginPath();
             infCtx.moveTo(toCanvasX(0), toCanvasY(b));
-            infCtx.lineTo(toCanvasX(5), toCanvasY(m * 5 + b));
+            infCtx.lineTo(toCanvasX(5), toCanvasY(m * 5.0 + b));
             infCtx.stroke();
 
+            // Draw Base Point
             drawPoint(infCtx, x, y, '#38bdf8');
 
             // Draw "Microscope" View (A circle showing zoomed in view)
-            const scopeX = 130;
-            const scopeY = 120;
-            const scopeRadius = 90;
+            const scopeX = 130.0;
+            const scopeY = 120.0;
+            const scopeRadius = 90.0;
 
             // Microscope connecting line
             infCtx.strokeStyle = '#475569';
@@ -270,7 +275,7 @@
 
             // Scope Background
             infCtx.beginPath();
-            infCtx.arc(scopeX, scopeY, scopeRadius, 0, Math.PI * 2);
+            infCtx.arc(scopeX, scopeY, scopeRadius, 0, Math.PI * 2.);
             infCtx.fillStyle = '#0f172a';
             infCtx.fill();
             infCtx.lineWidth = 3;
@@ -280,13 +285,13 @@
             // Scope Content
             infCtx.save();
             infCtx.beginPath();
-            infCtx.arc(scopeX, scopeY, scopeRadius, 0, Math.PI * 2);
+            infCtx.arc(scopeX, scopeY, scopeRadius, 0, Math.PI * 2.);
             infCtx.clip();
 
             // 1. Calculate Real World Window Size Based on Zoom
             // Higher zoom = smaller window of the actual math function
-            let viewWidth = 6.0 / zoom; 
-            let scaleScope = scopeRadius / (viewWidth / 2);
+            let viewWidth = 6.0 / zoom * 1.0; 
+            let scaleScope = scopeRadius / (viewWidth / 2.0);
 
             // 2. Draw Tangent Line in Scope
             infCtx.strokeStyle = '#c084fc';
@@ -316,13 +321,19 @@
             let dy_simulated = dx_simulated * m; 
             
             // Constrain if dy is too tall for the scope
-            if (Math.abs(dy_simulated) > scopeRadius - 15) {
-                dy_simulated = (scopeRadius - 15) * Math.sign(dy_simulated);
+            if (Math.abs(dy_simulated) > scopeRadius - 15.0) {
+                dy_simulated = (scopeRadius - 15.0) * Math.sign(dy_simulated);
                 dx_simulated = dy_simulated / m;
             }
 
-            let startX = scopeX - dx_simulated/2;
-            let startY = scopeY + dy_simulated/2;
+            let startX = scopeX - dx_simulated/2.0;
+            let startY = scopeY + dy_simulated/2.0;
+
+            // Draw Base Point
+            infCtx.fillStyle = '#38bdf8';
+            infCtx.beginPath();
+            infCtx.arc(startX + dx_simulated/2.0, startY - dy_simulated/2.0, 4+5*(zoom/30.0), 0, Math.PI * 2);
+            infCtx.fill();
 
             infCtx.strokeStyle = '#f43f5e';
             infCtx.lineWidth = 2;
@@ -337,8 +348,8 @@
             // Scope Text
             infCtx.fillStyle = '#f43f5e';
             infCtx.font = '14px sans-serif';
-            infCtx.fillText('dx', startX + dx_simulated/2 - 10, startY + 15);
-            infCtx.fillText('dy', startX + dx_simulated + 10, startY - dy_simulated/2 + 5);
+            infCtx.fillText('dx', startX + dx_simulated/2.0 - 10, startY + 15.0);
+            infCtx.fillText('dy', startX + dx_simulated + 10, startY - dy_simulated/2.0 + 5.0);
             
             infCtx.fillStyle = '#94a3b8';
             infCtx.fillText(`${zoom}x Mag`, scopeX - 30, scopeY - 70);
@@ -347,17 +358,17 @@
 
             infCtx.fillStyle = '#c084fc';
             infCtx.font = '14px sans-serif';
-            infCtx.fillText(`Tangent Slope (dy/dx) = ${m.toFixed(2)}`, 20, 30);
+            infCtx.fillText(`Tangent Slope (dy/dx) = ${m.toFixed(2)}`, 60, 20);
         }
 
         function updateSimulations() {
             const x = parseFloat(xSlider.value);
             const h = parseFloat(hSlider.value);
-            const zoom = parseInt(zoomSlider.value);
+            const zoom = parseFloat(zoomSlider.value);
 
             xVal.textContent = x.toFixed(2);
             hVal.textContent = h.toFixed(2);
-            zoomVal.textContent = zoom + 'x';
+            zoomVal.textContent = zoom.toFixed(1) + 'x';
 
             renderLimitCanvas(x, h);
             renderInfinitesimalCanvas(x, zoom);
