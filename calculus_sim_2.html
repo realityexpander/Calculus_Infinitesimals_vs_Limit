@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculus Interactive Visualization</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h2 {
+            color: #38bdf8;
+            margin-bottom: 20px;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+        .controls {
+            background-color: #1e293b;
+            padding: 20px 40px;
+            border-radius: 12px;
+            display: flex;
+            gap: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+            border: 1px solid #334155;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        label {
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #94a3b8;
+            font-weight: bold;
+        }
+        span.val-display {
+            color: #38bdf8;
+        }
+        input[type=range] {
+            width: 180px;
+            cursor: pointer;
+        }
+        .sim-container {
+            display: flex;
+            gap: 30px;
+            width: 100%;
+            max-width: 1200px;
+            justify-content: center;
+        }
+        .panel {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+        }
+        .panel h3 {
+            margin-top: 0;
+            color: #f8fafc;
+            font-weight: 400;
+            font-size: 16px;
+        }
+        .panel p {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 15px;
+            text-align: center;
+            height: 30px;
+        }
+        canvas {
+            background-color: #0b1120;
+            border: 1px solid #334155;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>VISUALIZING CALCULUS: INFINITESIMALS VS. LIMITS</h2>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="xSlider">Base Point (x): <span id="xVal" class="val-display">1.50</span></label>
+            <input type="range" id="xSlider" min="0.2" max="2.5" step="0.05" value="1.5">
+        </div>
+        <div class="control-group">
+            <label for="hSlider">Limit Step Size (h): <span id="hVal" class="val-display">1.00</span></label>
+            <input type="range" id="hSlider" min="0.01" max="2.0" step="0.01" value="1.0">
+        </div>
+        <div class="control-group">
+            <label for="zoomSlider">Microscope Zoom: <span id="zoomVal" class="val-display">15x</span></label>
+            <input type="range" id="zoomSlider" min="5" max="40" step="1" value="15">
+        </div>
+    </div>
+
+    <div class="sim-container">
+        <!-- Infinitesimal Panel -->
+        <div class="panel">
+            <h3>THE INFINITESIMAL APPROACH</h3>
+            <p>Under a hyperreal microscope, the curve becomes perfectly straight.<br>dx and dy are non-zero, concrete numbers forming a fraction.</p>
+            <canvas id="infCanvas" width="500" height="400"></canvas>
+        </div>
+
+        <!-- Limit Panel -->
+        <div class="panel">
+            <h3>THE LIMIT APPROACH</h3>
+            <p>Evaluating the secant line as h approaches 0.<br>The limit is a process, and dy/dx is treated as notation, not a fraction.</p>
+            <canvas id="limCanvas" width="500" height="400"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const xSlider = document.getElementById('xSlider');
+        const hSlider = document.getElementById('hSlider');
+        const zoomSlider = document.getElementById('zoomSlider');
+        
+        const xVal = document.getElementById('xVal');
+        const hVal = document.getElementById('hVal');
+        const zoomVal = document.getElementById('zoomVal');
+
+        const infCanvas = document.getElementById('infCanvas');
+        const infCtx = infCanvas.getContext('2d');
+        const limCanvas = document.getElementById('limCanvas');
+        const limCtx = limCanvas.getContext('2d');
+
+        // Math Function: y = 0.5 * x^2
+        const f = (x) => 0.5 * x * x;
+        const df = (x) => x; // Derivative
+
+        // Canvas scaling parameters
+        const scaleX = 100;
+        const scaleY = 100;
+        const offsetX = 50;
+        const offsetY = 350;
+
+        function toCanvasX(x) { return offsetX + x * scaleX; }
+        function toCanvasY(y) { return offsetY - y * scaleY; }
+
+        function drawGrid(ctx, width, height) {
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1;
+            for(let i = 0; i < width; i += 50) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke();
+            }
+            for(let i = 0; i < height; i += 50) {
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke();
+            }
+            // Axes
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(offsetX, 0); ctx.lineTo(offsetX, height); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, offsetY); ctx.lineTo(width, offsetY); ctx.stroke();
+        }
+
+        function drawCurve(ctx, width, height) {
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let px = offsetX; px < width; px++) {
+                let x = (px - offsetX) / scaleX;
+                let y = f(x);
+                if (px === offsetX) ctx.moveTo(px, toCanvasY(y));
+                else ctx.lineTo(px, toCanvasY(y));
+            }
+            ctx.stroke();
+        }
+
+        function drawPoint(ctx, x, y, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(toCanvasX(x), toCanvasY(y), 5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function renderLimitCanvas(x, h) {
+            limCtx.clearRect(0, 0, limCanvas.width, limCanvas.height);
+            drawGrid(limCtx, limCanvas.width, limCanvas.height);
+            drawCurve(limCtx, limCanvas.width, limCanvas.height);
+
+            let y1 = f(x);
+            let x2 = x + h;
+            let y2 = f(x2);
+
+            // Secant Line
+            limCtx.strokeStyle = '#10b981'; // Green
+            limCtx.lineWidth = 2;
+            
+            // Calculate slope to extend line across canvas
+            let m = (y2 - y1) / (x2 - x);
+            let b = y1 - m * x;
+            
+            let extX1 = 0;
+            let extY1 = m * extX1 + b;
+            let extX2 = 5;
+            let extY2 = m * extX2 + b;
+
+            limCtx.beginPath();
+            limCtx.moveTo(toCanvasX(extX1), toCanvasY(extY1));
+            limCtx.lineTo(toCanvasX(extX2), toCanvasY(extY2));
+            limCtx.stroke();
+
+            // Triangle showing h and f(x+h) - f(x)
+            limCtx.strokeStyle = '#f59e0b';
+            limCtx.setLineDash([5, 5]);
+            limCtx.beginPath();
+            limCtx.moveTo(toCanvasX(x), toCanvasY(y1));
+            limCtx.lineTo(toCanvasX(x2), toCanvasY(y1));
+            limCtx.lineTo(toCanvasX(x2), toCanvasY(y2));
+            limCtx.stroke();
+            limCtx.setLineDash([]);
+
+            drawPoint(limCtx, x, y1, '#38bdf8');
+            drawPoint(limCtx, x2, y2, '#10b981');
+
+            // Labels
+            limCtx.fillStyle = '#f59e0b';
+            limCtx.font = '14px sans-serif';
+            limCtx.fillText(`h = ${h.toFixed(2)}`, toCanvasX(x + h/2) - 20, toCanvasY(y1) + 20);
+            
+            limCtx.fillStyle = '#10b981';
+            limCtx.fillText(`Secant Slope: ${m.toFixed(2)}`, 20, 30);
+            limCtx.fillStyle = '#38bdf8';
+            limCtx.fillText(`Actual Tangent: ${df(x).toFixed(2)}`, 20, 50);
+        }
+
+        function renderInfinitesimalCanvas(x, zoom) {
+            infCtx.clearRect(0, 0, infCanvas.width, infCanvas.height);
+            drawGrid(infCtx, infCanvas.width, infCanvas.height);
+            drawCurve(infCtx, infCanvas.width, infCanvas.height);
+
+            let y = f(x);
+            let m = df(x);
+
+            // True Tangent Line
+            infCtx.strokeStyle = '#c084fc'; // Purple
+            infCtx.lineWidth = 2;
+            let b = y - m * x;
+            infCtx.beginPath();
+            infCtx.moveTo(toCanvasX(0), toCanvasY(b));
+            infCtx.lineTo(toCanvasX(5), toCanvasY(m * 5 + b));
+            infCtx.stroke();
+
+            drawPoint(infCtx, x, y, '#38bdf8');
+
+            // Draw "Microscope" View (A circle showing zoomed in view)
+            const scopeX = 130;
+            const scopeY = 120;
+            const scopeRadius = 90;
+
+            // Microscope connecting line
+            infCtx.strokeStyle = '#475569';
+            infCtx.lineWidth = 1;
+            infCtx.beginPath();
+            infCtx.moveTo(toCanvasX(x), toCanvasY(y));
+            infCtx.lineTo(scopeX, scopeY);
+            infCtx.stroke();
+
+            // Scope Background
+            infCtx.beginPath();
+            infCtx.arc(scopeX, scopeY, scopeRadius, 0, Math.PI * 2);
+            infCtx.fillStyle = '#0f172a';
+            infCtx.fill();
+            infCtx.lineWidth = 3;
+            infCtx.strokeStyle = '#38bdf8';
+            infCtx.stroke();
+
+            // Scope Content
+            infCtx.save();
+            infCtx.beginPath();
+            infCtx.arc(scopeX, scopeY, scopeRadius, 0, Math.PI * 2);
+            infCtx.clip();
+
+            // 1. Calculate Real World Window Size Based on Zoom
+            // Higher zoom = smaller window of the actual math function
+            let viewWidth = 6.0 / zoom; 
+            let scaleScope = scopeRadius / (viewWidth / 2);
+
+            // 2. Draw Tangent Line in Scope
+            infCtx.strokeStyle = '#c084fc';
+            infCtx.lineWidth = 1;
+            infCtx.beginPath();
+            infCtx.moveTo(scopeX - scopeRadius, scopeY + m * scopeRadius);
+            infCtx.lineTo(scopeX + scopeRadius, scopeY - m * scopeRadius);
+            infCtx.stroke();
+
+            // 3. Draw Actual Curve in Scope (Shows flattening as zoom increases)
+            infCtx.strokeStyle = '#38bdf8';
+            infCtx.lineWidth = 3;
+            infCtx.beginPath();
+            for (let i = -scopeRadius; i <= scopeRadius; i += 2) {
+                let realX = x + (i / scopeRadius) * (viewWidth / 2);
+                let realY = f(realX);
+                let yDiff = realY - y;
+                let scopePy = scopeY - (yDiff * scaleScope);
+                
+                if (i === -scopeRadius) infCtx.moveTo(scopeX + i, scopePy);
+                else infCtx.lineTo(scopeX + i, scopePy);
+            }
+            infCtx.stroke();
+
+            // 4. Draw dx, dy triangle dynamically scaling with zoom
+            let dx_simulated = Math.min(scopeRadius - 10, zoom * 2.5); 
+            let dy_simulated = dx_simulated * m; 
+            
+            // Constrain if dy is too tall for the scope
+            if (Math.abs(dy_simulated) > scopeRadius - 15) {
+                dy_simulated = (scopeRadius - 15) * Math.sign(dy_simulated);
+                dx_simulated = dy_simulated / m;
+            }
+
+            let startX = scopeX - dx_simulated/2;
+            let startY = scopeY + dy_simulated/2;
+
+            infCtx.strokeStyle = '#f43f5e';
+            infCtx.lineWidth = 2;
+            infCtx.setLineDash([4, 4]);
+            infCtx.beginPath();
+            infCtx.moveTo(startX, startY);
+            infCtx.lineTo(startX + dx_simulated, startY);
+            infCtx.lineTo(startX + dx_simulated, startY - dy_simulated);
+            infCtx.stroke();
+            infCtx.setLineDash([]);
+
+            // Scope Text
+            infCtx.fillStyle = '#f43f5e';
+            infCtx.font = '14px sans-serif';
+            infCtx.fillText('dx', startX + dx_simulated/2 - 10, startY + 15);
+            infCtx.fillText('dy', startX + dx_simulated + 10, startY - dy_simulated/2 + 5);
+            
+            infCtx.fillStyle = '#94a3b8';
+            infCtx.fillText(`${zoom}x Mag`, scopeX - 30, scopeY - 70);
+
+            infCtx.restore();
+
+            infCtx.fillStyle = '#c084fc';
+            infCtx.font = '14px sans-serif';
+            infCtx.fillText(`Tangent Slope (dy/dx) = ${m.toFixed(2)}`, 20, 30);
+        }
+
+        function updateSimulations() {
+            const x = parseFloat(xSlider.value);
+            const h = parseFloat(hSlider.value);
+            const zoom = parseInt(zoomSlider.value);
+
+            xVal.textContent = x.toFixed(2);
+            hVal.textContent = h.toFixed(2);
+            zoomVal.textContent = zoom + 'x';
+
+            renderLimitCanvas(x, h);
+            renderInfinitesimalCanvas(x, zoom);
+        }
+
+        // Event Listeners
+        xSlider.addEventListener('input', updateSimulations);
+        hSlider.addEventListener('input', updateSimulations);
+        zoomSlider.addEventListener('input', updateSimulations);
+
+        // Initial render
+        updateSimulations();
+    </script>
+</body>
+</html>
