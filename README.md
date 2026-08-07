@@ -2,8 +2,9 @@
 ## Definition of Derivative: Infinitesimals vs. Limits
 
 <a href="https://realityexpander.github.io/Calculus_Infinitesimals_vs_Limit/">
- <img width="524" src="https://github.com/user-attachments/assets/5ddf1cd3-4d29-4576-ab84-05efd60b01e8" alt="image">
+ <img width="524" src="https://github.com/user-attachments/assets/c7ccbe42-719e-4386-a90f-cdbc59417b3d" alt="image">
 </a>
+
 
 Click link for the visualizer:
 http://github.io/realityexpander/Calculus_Infinitesimals_vs_Limit
