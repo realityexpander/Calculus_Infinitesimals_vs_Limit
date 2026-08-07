@@ -5,6 +5,7 @@
  <img width="524" src="https://github.com/user-attachments/assets/5ddf1cd3-4d29-4576-ab84-05efd60b01e8" alt="image">
 </a>
 
+Click link for the visualizer:
 http://github.io/realityexpander/Calculus_Infinitesimals_vs_Limit
 
 An interactive, browser-based simulation that provides a side-by-side visual comparison of two foundational approaches to calculus: standard limit theory and non-standard analysis (infinitesimals). 
