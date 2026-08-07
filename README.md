@@ -1,4 +1,4 @@
-# Calculus Visualizer: Definition of a derivative - Infinitesimals vs. Limit
+# Calculus Visualizer: Definition of a derivative - Infinitesimals vs. Limits
 
 <!--
 [<img width="524" src="https://github.com/user-attachments/assets/5ddf1cd3-4d29-4576-ab84-05efd60b01e8" alt="image">](http://github.io/realityexpander/Calculus_Infinitesimals_vs_Limit)
